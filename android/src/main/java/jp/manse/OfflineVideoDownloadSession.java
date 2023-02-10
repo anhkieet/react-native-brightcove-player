@@ -1,7 +1,6 @@
 package jp.manse;
 
-import android.support.annotation.NonNull;
-import android.util.Log;
+import androidx.annotation.NonNull;
 
 import com.brightcove.player.edge.Catalog;
 import com.brightcove.player.edge.OfflineCallback;
@@ -41,8 +40,10 @@ public class OfflineVideoDownloadSession extends VideoListener implements MediaD
     }
 
     public OfflineVideoDownloadSession(ReactApplicationContext context, String accountId, String policyKey, OnOfflineVideoDownloadSessionListener listener) {
-        this.catalog = new Catalog(DefaultEventEmitter.sharedEventEmitter, accountId, policyKey);
-        this.offlineCatalog = new OfflineCatalog(context, DefaultEventEmitter.sharedEventEmitter, accountId, policyKey);
+//        this.catalog = new Catalog(DefaultEventEmitter.sharedEventEmitter, accountId, policyKey);
+        this.catalog = new Catalog.Builder(DefaultEventEmitter.sharedEventEmitter, accountId).setBaseURL(Catalog.DEFAULT_EDGE_BASE_URL).setPolicy(policyKey).build();
+        this.offlineCatalog = new OfflineCatalog.Builder(context, DefaultEventEmitter.sharedEventEmitter, accountId).setBaseURL(Catalog.DEFAULT_EDGE_BASE_URL).setPolicy(policyKey).build();
+//        this.offlineCatalog = new OfflineCatalog(context, DefaultEventEmitter.sharedEventEmitter, accountId, policyKey);
         this.offlineCatalog.setMeteredDownloadAllowed(true);
         this.offlineCatalog.setMobileDownloadAllowed(true);
         this.offlineCatalog.setRoamingDownloadAllowed(true);
