@@ -15,10 +15,14 @@
 }
 
 - (void)setup {
+//    [AVAudioSession.sharedInstance setCategory:AVAudioSessionCategoryPlayback mode:AVAudioSessionModeMoviePlayback routeSharingPolicy:AVAudioSessionRouteSharingPolicyLongForm options:0 error:nil];
+
     _playbackController = [BCOVPlayerSDKManager.sharedManager createPlaybackController];
     _playbackController.delegate = self;
     _playbackController.autoPlay = NO;
     _playbackController.autoAdvance = YES;
+    _playbackController.allowsExternalPlayback = YES;
+    _videoUrl = nil;
     
     _playerView = [[BCOVPUIPlayerView alloc] initWithPlaybackController:self.playbackController options:nil controlsView:[BCOVPUIBasicControlView basicControlViewWithVODLayout] ];
     _playerView.delegate = self;
@@ -49,6 +53,7 @@
     if (!_playbackService) return;
     if (_videoId) {
         [_playbackService findVideoWithVideoID:_videoId parameters:nil completion:^(BCOVVideo *video, NSDictionary *jsonResponse, NSError *error) {
+            NSLog(@"Error: %@", error);
             if (video) {
                 [self.playbackController setVideos: @[ video ]];
             }
@@ -56,6 +61,15 @@
     } else if (_referenceId) {
         [_playbackService findVideoWithReferenceID:_referenceId parameters:nil completion:^(BCOVVideo *video, NSDictionary *jsonResponse, NSError *error) {
             if (video) {
+                for (int i = 0; i < [video.sources count]; i++) {
+                    BCOVSource *source = video.sources[i];
+                    NSLog(@"Error: %@", source);
+                    if ([source.deliveryMethod  isEqual: @"video/mp4"]) {
+                        self.videoUrl = source.url.absoluteString;
+                    }
+                }
+
+
                 [self.playbackController setVideos: @[ video ]];
             }
         }];
@@ -203,7 +217,8 @@
 - (void)playbackController:(id<BCOVPlaybackController>)controller playbackSession:(id<BCOVPlaybackSession>)session didChangeDuration:(NSTimeInterval)duration {
     if (self.onChangeDuration) {
         self.onChangeDuration(@{
-                                @"duration": @(duration)
+                                @"duration": @(duration),
+                                @"video_url": self.videoUrl
                                 });
     }
 }

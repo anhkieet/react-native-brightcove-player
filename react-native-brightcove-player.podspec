@@ -14,7 +14,6 @@ Pod::Spec.new do |s|
   s.source              = { :git => "https://github.com/manse/react-native-brightcove-player.git" }
   s.source_files        = 'ios/**/*.{h,m}'
 
-  s.dependency          'React'
-  s.dependency          'Brightcove-Player-Core'
-  s.static_framework    = false
+  s.dependency          'Brightcove-Player-Core-static'
+  s.static_framework    = true
 end

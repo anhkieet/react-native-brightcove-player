@@ -31,6 +31,7 @@
 @property (nonatomic, copy) NSString *videoToken;
 @property (nonatomic, copy) NSString *accountId;
 @property (nonatomic, copy) NSString *policyKey;
+@property (nonatomic, copy) NSString *videoUrl;
 @property (nonatomic, copy) RCTDirectEventBlock onReady;
 @property (nonatomic, copy) RCTDirectEventBlock onPlay;
 @property (nonatomic, copy) RCTDirectEventBlock onPause;

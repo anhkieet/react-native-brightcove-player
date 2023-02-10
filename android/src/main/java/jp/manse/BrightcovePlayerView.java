@@ -1,7 +1,7 @@
 package jp.manse;
 
 import android.graphics.Color;
-import android.support.v4.view.ViewCompat;
+import androidx.core.view.ViewCompat;
 import android.util.Log;
 import android.view.SurfaceView;
 import android.widget.RelativeLayout;
@@ -15,6 +15,9 @@ import com.brightcove.player.event.EventEmitter;
 import com.brightcove.player.event.EventListener;
 import com.brightcove.player.event.EventType;
 import com.brightcove.player.mediacontroller.BrightcoveMediaController;
+import com.brightcove.player.model.DeliveryType;
+import com.brightcove.player.model.Source;
+import com.brightcove.player.model.SourceCollection;
 import com.brightcove.player.model.Video;
 import com.brightcove.player.view.BrightcoveExoPlayerVideoView;
 import com.facebook.react.bridge.Arguments;
@@ -38,6 +41,7 @@ import com.google.android.exoplayer2.trackselection.TrackSelection;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class BrightcovePlayerView extends RelativeLayout implements LifecycleEventListener {
     private ThemedReactContext context;
@@ -47,6 +51,7 @@ public class BrightcovePlayerView extends RelativeLayout implements LifecycleEve
     private String policyKey;
     private String accountId;
     private String videoId;
+    private String videoUrl;
     private String referenceId;
     private String videoToken;
     private Catalog catalog;
@@ -55,7 +60,7 @@ public class BrightcovePlayerView extends RelativeLayout implements LifecycleEve
     private boolean playing = false;
     private int bitRate = 0;
     private float playbackRate = 1;
-    private static final TrackSelection.Factory FIXED_FACTORY = new FixedTrackSelection.Factory();
+//    private static final TrackSelection.Factory FIXED_FACTORY = new FixedTrackSelection.Factory();
 
     public BrightcovePlayerView(ThemedReactContext context, ReactApplicationContext applicationContext) {
         super(context);
@@ -69,7 +74,7 @@ public class BrightcovePlayerView extends RelativeLayout implements LifecycleEve
         this.playerVideoView.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         this.playerVideoView.finishInitialization();
         this.mediaController = new BrightcoveMediaController(this.playerVideoView);
-        this.playerVideoView.setMediaController(this.mediaController);
+        // this.playerVideoView.setMediaController(this.mediaController);
         this.requestLayout();
         ViewCompat.setTranslationZ(this, 9999);
 
@@ -150,6 +155,7 @@ public class BrightcovePlayerView extends RelativeLayout implements LifecycleEve
                 Integer duration = (Integer) e.properties.get(Event.VIDEO_DURATION);
                 WritableMap event = Arguments.createMap();
                 event.putDouble("duration", duration / 1000d);
+                event.putString("video_url", BrightcovePlayerView.this.videoUrl);
                 ReactContext reactContext = (ReactContext) BrightcovePlayerView.this.getContext();
                 reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(BrightcovePlayerView.this.getId(), BrightcovePlayerManager.EVENT_CHANGE_DURATION, event);
             }
@@ -241,53 +247,53 @@ public class BrightcovePlayerView extends RelativeLayout implements LifecycleEve
     }
 
     private void updateBitRate() {
-        if (this.bitRate == 0) return;
-        ExoPlayerVideoDisplayComponent videoDisplay = ((ExoPlayerVideoDisplayComponent) this.playerVideoView.getVideoDisplay());
-        ExoPlayer player = videoDisplay.getExoPlayer();
-        DefaultTrackSelector trackSelector = videoDisplay.getTrackSelector();
-        if (player == null) return;
-        MappingTrackSelector.MappedTrackInfo mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
-        if (mappedTrackInfo == null) return;
-        Integer rendererIndex = null;
-        for (int i = 0; i < mappedTrackInfo.length; i++) {
-            TrackGroupArray trackGroups = mappedTrackInfo.getTrackGroups(i);
-            if (trackGroups.length != 0 && player.getRendererType(i) == C.TRACK_TYPE_VIDEO) {
-                rendererIndex = i;
-                break;
-            }
-        }
-
-        if (rendererIndex == null) return;
-        if (bitRate == 0) {
-            trackSelector.clearSelectionOverrides(rendererIndex);
-            return;
-        }
-        int resultBitRate = -1;
-        int targetGroupIndex = -1;
-        int targetTrackIndex = -1;
-        TrackGroupArray trackGroups = mappedTrackInfo.getTrackGroups(rendererIndex);
-        for (int groupIndex = 0; groupIndex < trackGroups.length; groupIndex++) {
-            TrackGroup group = trackGroups.get(groupIndex);
-            if (group != null) {
-                for (int trackIndex = 0; trackIndex < group.length; trackIndex++) {
-                    Format format = group.getFormat(trackIndex);
-                    if (format != null && mappedTrackInfo.getTrackFormatSupport(rendererIndex, groupIndex, trackIndex)
-                            == RendererCapabilities.FORMAT_HANDLED) {
-                        if (resultBitRate == -1 ||
-                                (resultBitRate > bitRate ? (format.bitrate < resultBitRate) :
-                                        (format.bitrate <= bitRate && format.bitrate > resultBitRate))) {
-                            targetGroupIndex = groupIndex;
-                            targetTrackIndex = trackIndex;
-                            resultBitRate = format.bitrate;
-                        }
-                    }
-                }
-            }
-        }
-        if (targetGroupIndex != -1 && targetTrackIndex != -1) {
-            trackSelector.setSelectionOverride(rendererIndex, trackGroups,
-                    new DefaultTrackSelector.SelectionOverride(targetGroupIndex, targetTrackIndex));
-        }
+//        if (this.bitRate == 0) return;
+//        ExoPlayerVideoDisplayComponent videoDisplay = ((ExoPlayerVideoDisplayComponent) this.playerVideoView.getVideoDisplay());
+//        ExoPlayer player = videoDisplay.getExoPlayer();
+//        DefaultTrackSelector trackSelector = videoDisplay.getTrackSelector();
+//        if (player == null) return;
+//        MappingTrackSelector.MappedTrackInfo mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
+//        if (mappedTrackInfo == null) return;
+//        Integer rendererIndex = null;
+//        for (int i = 0; i < mappedTrackInfo.length; i++) {
+//            TrackGroupArray trackGroups = mappedTrackInfo.getTrackGroups(i);
+//            if (trackGroups.length != 0 && player.getRendererType(i) == C.TRACK_TYPE_VIDEO) {
+//                rendererIndex = i;
+//                break;
+//            }
+//        }
+//
+//        if (rendererIndex == null) return;
+//        if (bitRate == 0) {
+//            trackSelector.clearSelectionOverrides(rendererIndex);
+//            return;
+//        }
+//        int resultBitRate = -1;
+//        int targetGroupIndex = -1;
+//        int targetTrackIndex = -1;
+//        TrackGroupArray trackGroups = mappedTrackInfo.getTrackGroups(rendererIndex);
+//        for (int groupIndex = 0; groupIndex < trackGroups.length; groupIndex++) {
+//            TrackGroup group = trackGroups.get(groupIndex);
+//            if (group != null) {
+//                for (int trackIndex = 0; trackIndex < group.length; trackIndex++) {
+//                    Format format = group.getFormat(trackIndex);
+//                    if (format != null && mappedTrackInfo.getTrackFormatSupport(rendererIndex, groupIndex, trackIndex)
+//                            == RendererCapabilities.FORMAT_HANDLED) {
+//                        if (resultBitRate == -1 ||
+//                                (resultBitRate > bitRate ? (format.bitrate < resultBitRate) :
+//                                        (format.bitrate <= bitRate && format.bitrate > resultBitRate))) {
+//                            targetGroupIndex = groupIndex;
+//                            targetTrackIndex = trackIndex;
+//                            resultBitRate = format.bitrate;
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        if (targetGroupIndex != -1 && targetTrackIndex != -1) {
+//            trackSelector.setSelectionOverride(rendererIndex, trackGroups,
+//                    new DefaultTrackSelector.SelectionOverride(targetGroupIndex, targetTrackIndex));
+//        }
     }
 
     private void updatePlaybackRate() {
@@ -298,8 +304,14 @@ public class BrightcovePlayerView extends RelativeLayout implements LifecycleEve
     }
 
     private void loadVideo() {
+        this.videoUrl = "";
+        if (this.policyKey == null || this.accountId == null) {
+            return;
+        }
         if (this.videoToken != null && !this.videoToken.equals("")) {
-            this.offlineCatalog = new OfflineCatalog(this.context, this.playerVideoView.getEventEmitter(), this.accountId, this.policyKey);
+            this.offlineCatalog = new OfflineCatalog.Builder(this.context, this.playerVideoView.getEventEmitter(), this.accountId).setBaseURL(Catalog.DEFAULT_EDGE_BASE_URL).setPolicy(this.policyKey).build();
+
+//            this.offlineCatalog = new OfflineCatalog(this.context, this.playerVideoView.getEventEmitter(), this.accountId, this.policyKey);
             try {
                 Video video = this.offlineCatalog.findOfflineVideoById(this.videoToken);
                 if (video != null) {
@@ -312,10 +324,21 @@ public class BrightcovePlayerView extends RelativeLayout implements LifecycleEve
         VideoListener listener = new VideoListener() {
             @Override
             public void onVideo(Video video) {
+                Map<DeliveryType, SourceCollection> map = video.getSourceCollections();
+                Set<DeliveryType> st = map.keySet();
+                SourceCollection sor = map.get(DeliveryType.valueOf("MP4"));
+                Set<Source> se = sor.getSources();
+                Object[] ar = se.toArray();
+                Source hp = (Source) ar[0];
+                Map<String, Object> ma = hp.getProperties();
+                String url = (String) ma.get("url");
+                BrightcovePlayerView.this.videoUrl = url;
+                Log.e("Brightcove_url", url);
                 playVideo(video);
             }
         };
-        this.catalog = new Catalog(this.playerVideoView.getEventEmitter(), this.accountId, this.policyKey);
+        this.catalog = new Catalog.Builder(this.playerVideoView.getEventEmitter(), this.accountId).setBaseURL(Catalog.DEFAULT_EDGE_BASE_URL).setPolicy(this.policyKey).build();
+//        this.catalog = new Catalog(this.playerVideoView.getEventEmitter(), this.accountId, this.policyKey);
         if (this.videoId != null) {
             this.catalog.findVideoByID(this.videoId, listener);
         } else if (this.referenceId != null) {

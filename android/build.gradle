@@ -1,4 +1,8 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
+def safeExtGet(prop, fallback) {
+    def retValue = rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+    return retValue
+}
 
 buildscript {
     repositories {
@@ -16,7 +20,7 @@ allprojects {
             url "$projectDir/../node_modules/react-native/android"
         }
         maven {
-            url 'http://repo.brightcove.com/releases'
+            url 'https://repo.brightcove.com/releases'
         }
     }
 }
@@ -24,12 +28,12 @@ allprojects {
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion "28.0.3"
+    compileSdkVersion safeExtGet('compileSdkVersion', 28)
+    buildToolsVersion safeExtGet('buildToolsVersion', '28.0.3')
 
     defaultConfig {
-        minSdkVersion 19
-        targetSdkVersion 26
+        minSdkVersion safeExtGet('minSdkVersion', 21)
+        targetSdkVersion safeExtGet('targetSdkVersion', 28)
         versionCode 1
         versionName "1.0"
         ndk {
@@ -43,5 +47,5 @@ android {
 
 dependencies {
     implementation 'com.facebook.react:react-native:+'
-    implementation 'com.brightcove.player:exoplayer2:6.8.0'
+    implementation 'com.brightcove.player:exoplayer2:7.1.4'
 }
