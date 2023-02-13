@@ -31,13 +31,10 @@ import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.PlaybackParameters;
-import com.google.android.exoplayer2.RendererCapabilities;
 import com.google.android.exoplayer2.source.TrackGroup;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.trackselection.FixedTrackSelection;
 import com.google.android.exoplayer2.trackselection.MappingTrackSelector;
-import com.google.android.exoplayer2.trackselection.TrackSelection;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -247,53 +244,53 @@ public class BrightcovePlayerView extends RelativeLayout implements LifecycleEve
     }
 
     private void updateBitRate() {
-//        if (this.bitRate == 0) return;
-//        ExoPlayerVideoDisplayComponent videoDisplay = ((ExoPlayerVideoDisplayComponent) this.playerVideoView.getVideoDisplay());
-//        ExoPlayer player = videoDisplay.getExoPlayer();
-//        DefaultTrackSelector trackSelector = videoDisplay.getTrackSelector();
-//        if (player == null) return;
-//        MappingTrackSelector.MappedTrackInfo mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
-//        if (mappedTrackInfo == null) return;
-//        Integer rendererIndex = null;
-//        for (int i = 0; i < mappedTrackInfo.length; i++) {
-//            TrackGroupArray trackGroups = mappedTrackInfo.getTrackGroups(i);
-//            if (trackGroups.length != 0 && player.getRendererType(i) == C.TRACK_TYPE_VIDEO) {
-//                rendererIndex = i;
-//                break;
-//            }
-//        }
-//
-//        if (rendererIndex == null) return;
-//        if (bitRate == 0) {
-//            trackSelector.clearSelectionOverrides(rendererIndex);
-//            return;
-//        }
-//        int resultBitRate = -1;
-//        int targetGroupIndex = -1;
-//        int targetTrackIndex = -1;
-//        TrackGroupArray trackGroups = mappedTrackInfo.getTrackGroups(rendererIndex);
-//        for (int groupIndex = 0; groupIndex < trackGroups.length; groupIndex++) {
-//            TrackGroup group = trackGroups.get(groupIndex);
-//            if (group != null) {
-//                for (int trackIndex = 0; trackIndex < group.length; trackIndex++) {
-//                    Format format = group.getFormat(trackIndex);
-//                    if (format != null && mappedTrackInfo.getTrackFormatSupport(rendererIndex, groupIndex, trackIndex)
-//                            == RendererCapabilities.FORMAT_HANDLED) {
-//                        if (resultBitRate == -1 ||
-//                                (resultBitRate > bitRate ? (format.bitrate < resultBitRate) :
-//                                        (format.bitrate <= bitRate && format.bitrate > resultBitRate))) {
-//                            targetGroupIndex = groupIndex;
-//                            targetTrackIndex = trackIndex;
-//                            resultBitRate = format.bitrate;
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        if (targetGroupIndex != -1 && targetTrackIndex != -1) {
-//            trackSelector.setSelectionOverride(rendererIndex, trackGroups,
-//                    new DefaultTrackSelector.SelectionOverride(targetGroupIndex, targetTrackIndex));
-//        }
+        if (this.bitRate == 0) return;
+        ExoPlayerVideoDisplayComponent videoDisplay = ((ExoPlayerVideoDisplayComponent) this.playerVideoView.getVideoDisplay());
+        ExoPlayer player = videoDisplay.getExoPlayer();
+        DefaultTrackSelector trackSelector = videoDisplay.getTrackSelector();
+        if (player == null) return;
+        MappingTrackSelector.MappedTrackInfo mappedTrackInfo = trackSelector.getCurrentMappedTrackInfo();
+        if (mappedTrackInfo == null) return;
+        Integer rendererIndex = null;
+        for (int i = 0; i < mappedTrackInfo.getRendererCount(); i++) {
+            TrackGroupArray trackGroups = mappedTrackInfo.getTrackGroups(i);
+            if (trackGroups.length != 0 && player.getRendererType(i) == C.TRACK_TYPE_VIDEO) {
+                rendererIndex = i;
+                break;
+            }
+        }
+
+        if (rendererIndex == null) return;
+        if (bitRate == 0) {
+            trackSelector.buildUponParameters().clearSelectionOverrides(rendererIndex);
+            return;
+        }
+        int resultBitRate = -1;
+        int targetGroupIndex = -1;
+        int targetTrackIndex = -1;
+        TrackGroupArray trackGroups = mappedTrackInfo.getTrackGroups(rendererIndex);
+        for (int groupIndex = 0; groupIndex < trackGroups.length; groupIndex++) {
+            TrackGroup group = trackGroups.get(groupIndex);
+            if (group != null) {
+                for (int trackIndex = 0; trackIndex < group.length; trackIndex++) {
+                    Format format = group.getFormat(trackIndex);
+                    if (format != null && mappedTrackInfo.getTrackSupport(rendererIndex, groupIndex, trackIndex)
+                            == C.FORMAT_HANDLED) {
+                        if (resultBitRate == -1 ||
+                                (resultBitRate > bitRate ? (format.bitrate < resultBitRate) :
+                                        (format.bitrate <= bitRate && format.bitrate > resultBitRate))) {
+                            targetGroupIndex = groupIndex;
+                            targetTrackIndex = trackIndex;
+                            resultBitRate = format.bitrate;
+                        }
+                    }
+                }
+            }
+        }
+        if (targetGroupIndex != -1 && targetTrackIndex != -1) {
+            trackSelector.buildUponParameters().setSelectionOverride(rendererIndex, trackGroups,
+                    new DefaultTrackSelector.SelectionOverride(targetGroupIndex, targetTrackIndex));
+        }
     }
 
     private void updatePlaybackRate() {
